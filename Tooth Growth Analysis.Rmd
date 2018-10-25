@@ -1,0 +1,59 @@
+---
+title: "Tooth Growth Analysis"
+author: "Helen"
+date: "24 October 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE, warning = FALSE)
+library(ggplot2)
+library(grid)
+library(gridExtra)
+library(tidyr)
+library(dplyr)
+```
+
+## Overview
+
+This report analyses the ToothGrowth data from the R datasets. The data is explored, summarised and compared. A sample of the dataset is shown below.
+
+```{r data}
+head(ToothGrowth)
+```
+
+## Exploratory analysis
+
+The data has three variables: "len", "supp" and "dose". The results split by supp and dose are shown in the graph below.
+
+```{r summary all}
+g1 <- ggplot(ToothGrowth, aes(x = supp, y = len, fill = supp)) + geom_boxplot() + facet_grid(. ~ dose) + ggtitle("Tooth growth boxplots") + xlab("Dosage size") + ylab("Length") + guides(fill = "none")
+g1
+
+```
+
+The graph shows that for both supplements the length tends to increase as dose increases. The OJ supplement appears to result in greater length than VC for doses 0.5 and 1, but the supplements appear to result in similar lengths at doses of 2.
+
+The graph also shows that the resulting lengths were slightly more variable for the OJ supplement at doses 0.5 and 1, though a lot less variable than VC at dose 2.
+
+It remains to be seen whether these differences are significant.
+
+There is some overlap in the lengths resulting from different doses, particularly from the OJ supplement. This can be seen in the graph below.
+
+```{r dotplot}
+g3 <- ggplot(ToothGrowth, aes(y = len, x = 1, fill = factor(dose))) + geom_dotplot(binwidth= 1, method = "histodot", binaxis = "y", stackgroups = TRUE, stackdir = "center") + facet_grid(. ~ supp) + ggtitle("Overall observations") + xlab("Supplement") + ylab("Length") + scale_fill_manual(values = c("skyblue", "royalblue", "navy"), name = "Dose") + scale_x_continuous(NULL, breaks = NULL)
+g3
+```
+
+The graph also shows that a greater range of lengths resulted from the VC supplement. It can be seen that each dose and supplement combination has 10 observations.
+
+
+## Data summary
+
+The data consists of 60 observations of tooth length, subdivided by supplement and dose. The table below summarises the data and its main features.
+
+```{r data summary}
+tg <- tbl_df(ToothGrowth)
+tg <- group_by(tg, dose, supp)
+summarise(tg, n(), min(len), max(len), mean(len))
+```
