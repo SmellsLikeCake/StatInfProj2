@@ -50,10 +50,42 @@ The graph also shows that a greater range of lengths resulted from the VC supple
 
 ## Data summary
 
-The data consists of 60 observations of tooth length, subdivided by supplement and dose. The table below summarises the data and its main features.
+The data consists of 60 observations of odontoblast length, subdivided by supplement and dose. The table below summarises the data and its main features.
 
 ```{r data summary}
 tg <- tbl_df(ToothGrowth)
 tg <- group_by(tg, dose, supp)
-summarise(tg, n(), min(len), max(len), mean(len))
+summarise(tg, n(), min(len), max(len), mean(len), sd(len))
 ```
+
+## Comparing tooth growth by supp and dose
+
+First, this report considers the two supplements separately, and tests whether the differences in odontoblast length seen due to the different dosage levels of each supplement are significant. For example, is the difference is length resulting from receiving a dosage of 0.5 OJ significantly different to that resulting from a dosage of 1 OJ?
+
+### OJ
+#### *Is the additional length seen at dosage 1 significantly higher than at dosage 0.5?*
+
+**Null hypothesis:** The mean of OJ's dosage 1 is the same as the mean of OJ's dosage 0.5.  
+**Alternative hypothesis:** The mean of OJ's dosage 1 is greater than the mean of OJ's dosage 0.5.
+
+The data are not paired, so an independent t-test must be used.
+
+```{r OJ 0.5 and 1}
+OJ0 <- filter(ToothGrowth, supp == "OJ", dose == 0.5)
+OJ1 <- filter(ToothGrowth, supp == "OJ", dose == 1)
+
+t.test(OJ0[, 1], OJ1[, 1], alt = "less")
+```
+
+The mean and standard deviation of OJ dosage 0.5 are:
+
+```{r OJ 0.5}
+m0 <- mean(ToothGrowth[ToothGrowth$supp == "OJ" & ToothGrowth$dose == 0.5, 1])
+m0
+
+sd0 <- sd(ToothGrowth[ToothGrowth$supp == "OJ" & ToothGrowth$dose == 0.5, 1])
+sd0
+```
+
+The mean
+This report compares the two supplements at the three dosage levels separately, resulting in three comparative tests. The comparisons test whether the differences in the odontoblast length due to the different supplements are statistically significant.

@@ -155,20 +155,56 @@ g3</code></pre>
 </div>
 <div id="data-summary" class="section level2">
 <h2>Data summary</h2>
-<p>The data consists of 60 observations of tooth length, subdivided by supplement and dose. The table below summarises the data and its main features.</p>
+<p>The data consists of 60 observations of odontoblast length, subdivided by supplement and dose. The table below summarises the data and its main features.</p>
 <pre class="r"><code>tg &lt;- tbl_df(ToothGrowth)
 tg &lt;- group_by(tg, dose, supp)
-summarise(tg, n(), min(len), max(len), mean(len))</code></pre>
-<pre><code>## # A tibble: 6 x 6
+summarise(tg, n(), min(len), max(len), mean(len), sd(len))</code></pre>
+<pre><code>## # A tibble: 6 x 7
 ## # Groups:   dose [?]
-##    dose supp  `n()` `min(len)` `max(len)` `mean(len)`
-##   &lt;dbl&gt; &lt;fct&gt; &lt;int&gt;      &lt;dbl&gt;      &lt;dbl&gt;       &lt;dbl&gt;
-## 1 0.500 OJ       10       8.20       21.5       13.2 
-## 2 0.500 VC       10       4.20       11.5        7.98
-## 3 1.00  OJ       10      14.5        27.3       22.7 
-## 4 1.00  VC       10      13.6        22.5       16.8 
-## 5 2.00  OJ       10      22.4        30.9       26.1 
-## 6 2.00  VC       10      18.5        33.9       26.1</code></pre>
+##    dose supp  `n()` `min(len)` `max(len)` `mean(len)` `sd(len)`
+##   &lt;dbl&gt; &lt;fct&gt; &lt;int&gt;      &lt;dbl&gt;      &lt;dbl&gt;       &lt;dbl&gt;     &lt;dbl&gt;
+## 1 0.500 OJ       10       8.20       21.5       13.2       4.46
+## 2 0.500 VC       10       4.20       11.5        7.98      2.75
+## 3 1.00  OJ       10      14.5        27.3       22.7       3.91
+## 4 1.00  VC       10      13.6        22.5       16.8       2.52
+## 5 2.00  OJ       10      22.4        30.9       26.1       2.66
+## 6 2.00  VC       10      18.5        33.9       26.1       4.80</code></pre>
+</div>
+<div id="comparing-tooth-growth-by-supp-and-dose" class="section level2">
+<h2>Comparing tooth growth by supp and dose</h2>
+<p>First, this report considers the two supplements separately, and tests whether the differences in odontoblast length seen due to the different dosage levels of each supplement are significant. For example, is the difference is length resulting from receiving a dosage of 0.5 OJ significantly different to that resulting from a dosage of 1 OJ?</p>
+<div id="oj" class="section level3">
+<h3>OJ</h3>
+<div id="is-the-additional-length-seen-at-dosage-1-significantly-higher-than-at-dosage-0.5" class="section level4">
+<h4><em>Is the additional length seen at dosage 1 significantly higher than at dosage 0.5?</em></h4>
+<p><strong>Null hypothesis:</strong> The mean of OJ’s dosage 1 is the same as the mean of OJ’s dosage 0.5.<br />
+<strong>Alternative hypothesis:</strong> The mean of OJ’s dosage 1 is greater than the mean of OJ’s dosage 0.5.</p>
+<p>The data are not paired, so an independent t-test must be used.</p>
+<pre class="r"><code>OJ0 &lt;- filter(ToothGrowth, supp == &quot;OJ&quot;, dose == 0.5)
+OJ1 &lt;- filter(ToothGrowth, supp == &quot;OJ&quot;, dose == 1)
+
+t.test(OJ0[, 1], OJ1[, 1], alt = &quot;less&quot;)</code></pre>
+<pre><code>## 
+##  Welch Two Sample t-test
+## 
+## data:  OJ0[, 1] and OJ1[, 1]
+## t = -5.0486, df = 17.698, p-value = 4.392e-05
+## alternative hypothesis: true difference in means is less than 0
+## 95 percent confidence interval:
+##       -Inf -6.214316
+## sample estimates:
+## mean of x mean of y 
+##     13.23     22.70</code></pre>
+<p>The mean and standard deviation of OJ dosage 0.5 are:</p>
+<pre class="r"><code>m0 &lt;- mean(ToothGrowth[ToothGrowth$supp == &quot;OJ&quot; &amp; ToothGrowth$dose == 0.5, 1])
+m0</code></pre>
+<pre><code>## [1] 13.23</code></pre>
+<pre class="r"><code>sd0 &lt;- sd(ToothGrowth[ToothGrowth$supp == &quot;OJ&quot; &amp; ToothGrowth$dose == 0.5, 1])
+sd0</code></pre>
+<pre><code>## [1] 4.459709</code></pre>
+<p>The mean This report compares the two supplements at the three dosage levels separately, resulting in three comparative tests. The comparisons test whether the differences in the odontoblast length due to the different supplements are statistically significant.</p>
+</div>
+</div>
 </div>
 
 
