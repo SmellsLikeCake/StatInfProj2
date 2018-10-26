@@ -183,7 +183,7 @@ summarise(tg, n(), min(len), max(len), mean(len), sd(len))</code></pre>
 <pre class="r"><code>OJ0 &lt;- filter(ToothGrowth, supp == &quot;OJ&quot;, dose == 0.5)
 OJ1 &lt;- filter(ToothGrowth, supp == &quot;OJ&quot;, dose == 1)
 
-t.test(OJ0[, 1], OJ1[, 1], alt = &quot;less&quot;)</code></pre>
+t.test(OJ0[, 1], OJ1[, 1], alt = &quot;less&quot;, mu = 0, paired = FALSE, var.equal = FALSE)</code></pre>
 <pre><code>## 
 ##  Welch Two Sample t-test
 ## 
@@ -195,14 +195,50 @@ t.test(OJ0[, 1], OJ1[, 1], alt = &quot;less&quot;)</code></pre>
 ## sample estimates:
 ## mean of x mean of y 
 ##     13.23     22.70</code></pre>
-<p>The mean and standard deviation of OJ dosage 0.5 are:</p>
-<pre class="r"><code>m0 &lt;- mean(ToothGrowth[ToothGrowth$supp == &quot;OJ&quot; &amp; ToothGrowth$dose == 0.5, 1])
-m0</code></pre>
-<pre><code>## [1] 13.23</code></pre>
-<pre class="r"><code>sd0 &lt;- sd(ToothGrowth[ToothGrowth$supp == &quot;OJ&quot; &amp; ToothGrowth$dose == 0.5, 1])
-sd0</code></pre>
-<pre><code>## [1] 4.459709</code></pre>
-<p>The mean This report compares the two supplements at the three dosage levels separately, resulting in three comparative tests. The comparisons test whether the differences in the odontoblast length due to the different supplements are statistically significant.</p>
+<p>Manual calculation of t statistic:</p>
+<pre class="r"><code>var &lt;- ((nrow(OJ0)-1)*var(OJ0[, 1])+(nrow(OJ1)-1)*var(OJ1[, 1]))/(nrow(OJ0)+nrow(OJ1)-2)
+
+t &lt;- (mean(OJ0[, 1]) - mean(OJ1[, 1])) / (sqrt(var) * (1/10 + 1/10)^0.5)
+t</code></pre>
+<pre><code>## [1] -5.048635</code></pre>
+<p>Manual calculation of confidence interval of t statistic:</p>
+<pre class="r"><code>ci &lt;- mean(OJ0[, 1]) - mean(OJ1[, 1]) + 1 * qt(0.95, 18) * sqrt(var) * (1/10 + 1/10)^0.5
+ci</code></pre>
+<pre><code>## [1] -6.217322</code></pre>
+<p>Manual calculation of p value:</p>
+<pre class="r"><code>pt(t, df = 18)</code></pre>
+<pre><code>## [1] 4.17878e-05</code></pre>
+<p>The manual calculations agree with the t.test calculations.</p>
+<p>The results show that it is 95% certain that the mean of OJ dose 0.5 minus the mean of OJ dose 1 is -6.21 or less. This does not include zero so the means are statistically significantly different. The p-value for the test is 4.2x10<sup>-5</sup> which means the result is significant at the 5% level.</p>
+</div>
+<div id="is-the-additional-length-seen-at-dosage-2-significantly-higher-than-at-dosage-1" class="section level4">
+<h4><em>Is the additional length seen at dosage 2 significantly higher than at dosage 1?</em></h4>
+<p><strong>Null hypothesis:</strong> The mean of OJ’s dosage 2 is the same as the mean of OJ’s dosage 1.<br />
+<strong>Alternative hypothesis:</strong> The mean of OJ’s dosage 2 is greater than the mean of OJ’s dosage 1.</p>
+<pre class="r"><code>OJ2 &lt;- filter(ToothGrowth, supp == &quot;OJ&quot;, dose == 2)
+t.test(OJ1[, 1], OJ2[, 1], alt = &quot;less&quot;, paired = FALSE, var.equal = FALSE)</code></pre>
+<pre><code>## 
+##  Welch Two Sample t-test
+## 
+## data:  OJ1[, 1] and OJ2[, 1]
+## t = -2.2478, df = 15.842, p-value = 0.0196
+## alternative hypothesis: true difference in means is less than 0
+## 95 percent confidence interval:
+##        -Inf -0.7486236
+## sample estimates:
+## mean of x mean of y 
+##     22.70     26.06</code></pre>
+<p>Manual checks:</p>
+<pre class="r"><code>var &lt;- (((nrow(OJ1)-1)*var(OJ1[, 1]))+(nrow(OJ2)-1)*var(OJ2[, 1]))/(nrow(OJ1)+nrow(OJ2)-2)
+t &lt;- (mean(OJ1[, 1]) - mean(OJ2[, 1])) / (sqrt(var)*(1/10+1/10)^0.5)
+t</code></pre>
+<pre><code>## [1] -2.247761</code></pre>
+<pre class="r"><code>ci &lt;- (mean(OJ1[, 1]) - mean(OJ2[, 1])) + 1 * qt(0.95, 18) * (sqrt(var)*(1/10+1/10)^0.5)
+ci</code></pre>
+<pre><code>## [1] -0.7678858</code></pre>
+<pre class="r"><code>p &lt;- pt(t, df = 18)
+p</code></pre>
+<pre><code>## [1] 0.0186814</code></pre>
 </div>
 </div>
 </div>
