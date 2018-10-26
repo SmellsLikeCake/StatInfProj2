@@ -121,6 +121,70 @@ t <- (mean(OJ1[, 1]) - mean(OJ2[, 1])) / (sqrt(var)*(1/10+1/10)^0.5)
 t
 ci <- (mean(OJ1[, 1]) - mean(OJ2[, 1])) + 1 * qt(0.95, 18) * (sqrt(var)*(1/10+1/10)^0.5)
 ci
-p <- pt(t, df = 18)
+vOJ1 <- var(OJ1[, 1])
+vOJ2 <- var(OJ2[, 1])
+nOJ1 <- nrow(OJ1)
+nOJ2 <- nrow(OJ2)
+df <- ((vOJ1/nOJ1 + vOJ2/nOJ2)^2)/((vOJ1/nOJ1)^2/(nOJ1-1) + (vOJ2/nOJ2)^2/(nOJ2-1))
+df
+p <- pt(t, df = df)
 p
+```
+
+The manual checks agree with t.test. Again the difference is significant at the 5% level.
+
+### VC
+#### *Is the additional length seen at dosage 1 significantly higher than at dosage 0.5?*
+
+**Null hypothesis:** The mean of VC's dosage 1 is the same as the mean of VC's dosage 0.5.  
+**Alternative hypothesis:** The mean of VC's dosage 1 is greater than the mean of VC's dosage 0.5.
+
+```{r VC 0.5 and 1}
+VC0 <- filter(ToothGrowth, supp == "VC", dose == 0.5)
+VC1 <- filter(ToothGrowth, supp == "VC", dose == 1)
+vVC0 <- var(VC0[, 1])
+vVC1 <- var(VC1[, 1])
+nVC0 <- nrow(VC0)
+nVC1 <- nrow(VC1)
+vVC01 <- ((nVC0-1)*vVC0 + (nVC1-1)*vVC1)/(nVC0+nVC1-2)
+t.test(VC0[, 1], VC1[, 1], "less", paired = FALSE, var.equal = FALSE, conf.level = 0.95)
+```
+
+Manual check:
+
+```{r VC 0.5 and 1 checks}
+tVC01 <- (mean(VC0[, 1]) - mean(VC1[, 1]))/(sqrt(vVC01)*(1/nVC0 + 1/nVC1)^0.5)
+tVC01
+dfVC01 <- (vVC0/nVC0 + vVC1/nVC1)^2/((vVC0/nVC0)^2/(nVC0-1) + (vVC1/nVC1)^2/(nVC1 - 1))
+ciVC01 <- mean(VC0[, 1]) - mean(VC1[, 1]) + 1 * qt(0.95, dfVC01) * sqrt(vVC01) * (1/nVC0 + 1/nVC1)^0.5
+ciVC01
+pVC01 <- pt(tVC01, dfVC01)
+pVC01
+
+```
+
+#### *Is the additional length seen at dosage 2 significantly higher than at dosage 1?*
+
+**Null hypothesis:** The mean of VC's dosage 2 is the same as the mean of VC's dosage 1.  
+**Alternative hypothesis:** The mean of VC's dosage 2 is greater than the mean of VC's dosage 1.
+
+```{r VC 1 and 2}
+VC2 <- filter(ToothGrowth, supp == "VC", dose == 2)
+nVC2 <- nrow(VC2)
+vVC2 <- var(VC2[, 1])
+vVC12 <- ((nVC1-1)* vVC1 + (nVC2-1)*vVC2)/(nVC1+nVC2-2)
+t.test(VC1[, 1], VC2[, 1], alt="less", paired = FALSE, var.equal = FALSE, conf.level = 0.95)
+```
+
+Manual checks:
+
+```{r VC 1 and 2 checks}
+tVC12 <- (mean(VC1[, 1]) - mean(VC2[, 1])) / (sqrt(vVC12) * sqrt(1/nVC1 + 1/nVC2))
+tVC12
+dfVC12 <- (vVC1/nVC1 + vVC2/nVC2)^2/((vVC1/nVC1)^2/(nVC1-1) + (vVC2/nVC2)^2/(nVC2-1))
+dfVC12
+ciVC12 <- mean(VC1[, 1]) - mean(VC2[, 1]) + 1 * qt(0.95, dfVC12) * sqrt(vVC12* (1/nVC1 + 1/nVC2))
+ciVC12
+pVC12 <- pt(tVC12, dfVC12)
+pVC12
 ```

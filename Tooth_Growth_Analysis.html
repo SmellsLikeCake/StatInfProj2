@@ -236,9 +236,89 @@ t</code></pre>
 <pre class="r"><code>ci &lt;- (mean(OJ1[, 1]) - mean(OJ2[, 1])) + 1 * qt(0.95, 18) * (sqrt(var)*(1/10+1/10)^0.5)
 ci</code></pre>
 <pre><code>## [1] -0.7678858</code></pre>
-<pre class="r"><code>p &lt;- pt(t, df = 18)
+<pre class="r"><code>vOJ1 &lt;- var(OJ1[, 1])
+vOJ2 &lt;- var(OJ2[, 1])
+nOJ1 &lt;- nrow(OJ1)
+nOJ2 &lt;- nrow(OJ2)
+df &lt;- ((vOJ1/nOJ1 + vOJ2/nOJ2)^2)/((vOJ1/nOJ1)^2/(nOJ1-1) + (vOJ2/nOJ2)^2/(nOJ2-1))
+df</code></pre>
+<pre><code>## [1] 15.84238</code></pre>
+<pre class="r"><code>p &lt;- pt(t, df = df)
 p</code></pre>
-<pre><code>## [1] 0.0186814</code></pre>
+<pre><code>## [1] 0.01959757</code></pre>
+<p>The manual checks agree with t.test. Again the difference is significant at the 5% level.</p>
+</div>
+</div>
+<div id="vc" class="section level3">
+<h3>VC</h3>
+<div id="is-the-additional-length-seen-at-dosage-1-significantly-higher-than-at-dosage-0.5-1" class="section level4">
+<h4><em>Is the additional length seen at dosage 1 significantly higher than at dosage 0.5?</em></h4>
+<p><strong>Null hypothesis:</strong> The mean of VC’s dosage 1 is the same as the mean of VC’s dosage 0.5.<br />
+<strong>Alternative hypothesis:</strong> The mean of VC’s dosage 1 is greater than the mean of VC’s dosage 0.5.</p>
+<pre class="r"><code>VC0 &lt;- filter(ToothGrowth, supp == &quot;VC&quot;, dose == 0.5)
+VC1 &lt;- filter(ToothGrowth, supp == &quot;VC&quot;, dose == 1)
+vVC0 &lt;- var(VC0[, 1])
+vVC1 &lt;- var(VC1[, 1])
+nVC0 &lt;- nrow(VC0)
+nVC1 &lt;- nrow(VC1)
+vVC01 &lt;- ((nVC0-1)*vVC0 + (nVC1-1)*vVC1)/(nVC0+nVC1-2)
+t.test(VC0[, 1], VC1[, 1], &quot;less&quot;, paired = FALSE, var.equal = FALSE, conf.level = 0.95)</code></pre>
+<pre><code>## 
+##  Welch Two Sample t-test
+## 
+## data:  VC0[, 1] and VC1[, 1]
+## t = -7.4634, df = 17.862, p-value = 3.406e-07
+## alternative hypothesis: true difference in means is less than 0
+## 95 percent confidence interval:
+##       -Inf -6.746867
+## sample estimates:
+## mean of x mean of y 
+##      7.98     16.77</code></pre>
+<p>Manual check:</p>
+<pre class="r"><code>tVC01 &lt;- (mean(VC0[, 1]) - mean(VC1[, 1]))/(sqrt(vVC01)*(1/nVC0 + 1/nVC1)^0.5)
+tVC01</code></pre>
+<pre><code>## [1] -7.46343</code></pre>
+<pre class="r"><code>dfVC01 &lt;- (vVC0/nVC0 + vVC1/nVC1)^2/((vVC0/nVC0)^2/(nVC0-1) + (vVC1/nVC1)^2/(nVC1 - 1))
+ciVC01 &lt;- mean(VC0[, 1]) - mean(VC1[, 1]) + 1 * qt(0.95, dfVC01) * sqrt(vVC01) * (1/nVC0 + 1/nVC1)^0.5
+ciVC01</code></pre>
+<pre><code>## [1] -6.746867</code></pre>
+<pre class="r"><code>pVC01 &lt;- pt(tVC01, dfVC01)
+pVC01</code></pre>
+<pre><code>## [1] 3.405509e-07</code></pre>
+</div>
+<div id="is-the-additional-length-seen-at-dosage-2-significantly-higher-than-at-dosage-1-1" class="section level4">
+<h4><em>Is the additional length seen at dosage 2 significantly higher than at dosage 1?</em></h4>
+<p><strong>Null hypothesis:</strong> The mean of VC’s dosage 2 is the same as the mean of VC’s dosage 1.<br />
+<strong>Alternative hypothesis:</strong> The mean of VC’s dosage 2 is greater than the mean of VC’s dosage 1.</p>
+<pre class="r"><code>VC2 &lt;- filter(ToothGrowth, supp == &quot;VC&quot;, dose == 2)
+nVC2 &lt;- nrow(VC2)
+vVC2 &lt;- var(VC2[, 1])
+vVC12 &lt;- ((nVC1-1)* vVC1 + (nVC2-1)*vVC2)/(nVC1+nVC2-2)
+t.test(VC1[, 1], VC2[, 1], alt=&quot;less&quot;, paired = FALSE, var.equal = FALSE, conf.level = 0.95)</code></pre>
+<pre><code>## 
+##  Welch Two Sample t-test
+## 
+## data:  VC1[, 1] and VC2[, 1]
+## t = -5.4698, df = 13.6, p-value = 4.578e-05
+## alternative hypothesis: true difference in means is less than 0
+## 95 percent confidence interval:
+##       -Inf -6.346525
+## sample estimates:
+## mean of x mean of y 
+##     16.77     26.14</code></pre>
+<p>Manual checks:</p>
+<pre class="r"><code>tVC12 &lt;- (mean(VC1[, 1]) - mean(VC2[, 1])) / (sqrt(vVC12) * sqrt(1/nVC1 + 1/nVC2))
+tVC12</code></pre>
+<pre><code>## [1] -5.469814</code></pre>
+<pre class="r"><code>dfVC12 &lt;- (vVC1/nVC1 + vVC2/nVC2)^2/((vVC1/nVC1)^2/(nVC1-1) + (vVC2/nVC2)^2/(nVC2-1))
+dfVC12</code></pre>
+<pre><code>## [1] 13.59996</code></pre>
+<pre class="r"><code>ciVC12 &lt;- mean(VC1[, 1]) - mean(VC2[, 1]) + 1 * qt(0.95, dfVC12) * sqrt(vVC12* (1/nVC1 + 1/nVC2))
+ciVC12</code></pre>
+<pre><code>## [1] -6.346525</code></pre>
+<pre class="r"><code>pVC12 &lt;- pt(tVC12, dfVC12)
+pVC12</code></pre>
+<pre><code>## [1] 4.577802e-05</code></pre>
 </div>
 </div>
 </div>
