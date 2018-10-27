@@ -96,7 +96,8 @@ ci
 Manual calculation of p value:
 
 ```{r OJ 0.5 and 1 manual 3}
-pt(t, df = 18)
+pOJ01 <- pt(t, df = 18)
+pOJ01
 ```
 
 The manual calculations agree with the t.test calculations.
@@ -127,8 +128,8 @@ nOJ1 <- nrow(OJ1)
 nOJ2 <- nrow(OJ2)
 df <- ((vOJ1/nOJ1 + vOJ2/nOJ2)^2)/((vOJ1/nOJ1)^2/(nOJ1-1) + (vOJ2/nOJ2)^2/(nOJ2-1))
 df
-p <- pt(t, df = df)
-p
+pOJ12 <- pt(t, df = df)
+pOJ12
 ```
 
 The manual checks agree with t.test. Again the difference is significant at the 5% level.
@@ -215,7 +216,7 @@ df0 <- (vOJ0/nOJ0 + vVC0/nVC0)^2 / ((vOJ0/nOJ0)^2/(nOJ0 -1) + (vVC0/nVC0)^2/(nVC
 df0
 ci0 <- (mean(OJ0[, 1])- mean(VC0[, 1])) + c(-1,1) * qt(0.975, df0) * sqrt(vOJVC0 * (1/nOJ0 + 1/nVC0))
 ci0
-p0 <- 2*(1- pt(t0, df0))
+p0 <- 2*(pt(-abs(t0), df0))
 p0
 ```
 
@@ -238,7 +239,7 @@ df1 <- (vOJ1/nOJ1 + vVC1/nVC1)^2/ ((vOJ1/nOJ1)^2/(nOJ1-1) + (vVC1/nVC1)^2/(nVC1-
 df1
 ci1 <- (mean(OJ1[, 1]) - mean(VC1[, 1])) + c(-1, 1) * qt(0.975, df1) * sqrt(vOJVC1 * (1/nOJ1 + 1/nVC1))
 ci1
-p1 <- 2*(1- pt(t1, df1))
+p1 <- 2*(pt(-abs(t1), df1))
 p1
 ```
 
@@ -261,7 +262,68 @@ df2 <- (vOJ2/nOJ2 + vVC2/nVC2)^2/((vOJ2/nOJ2)^2/(nOJ2-1) +(vVC2/nVC2)^2/(nVC2-1)
 df2
 ci2 <- (mean(OJ2[, 1]) - mean(VC2[, 1])) + c(-1, 1) * qt(0.975, df2) * sqrt(vOJVC2 * (1/nOJ2 + 1/nVC2))
 ci2
-p2 <- 2*(1-pt(t2, df2))
+p2 <- 2*(pt(-abs(t2), df2))
 p2
 
 ```
+
+### Correcting for multiple testing
+
+Because the same data has been used to test multiple hypotheses, the chance of one of the significant results being a false positive is higher than the significance level of 5%. For example, if 20 hypotheses are tested and found to be significant at the 5% level, one is expected to be wrong by chance (as 5% means 1 in 20 chance of getting a result that extreme when the null hypothesis is correct). This should be corrected for.
+
+The p values of all the tests are held in the dataframe all_results.
+
+```{r all results}
+test_names <- c("pOJ01", "pOJ12", "pVC01", "pVC12", "p0", "p1", "p2")
+p_values <- c(pOJ01, pOJ12, pVC01, pVC12, p0, p1, p2)
+p_values <- round(p_values, 8)
+p_values
+all_results <- data.frame(test_names, p_values)
+all_results
+```
+
+The significant results are held in the dataframe sig_results.
+
+```{r sig results}
+sig_results <- all_results[all_results$p_value < 0.05, ]
+sig_results
+```
+
+The Bonferroni correction is the most strict correction. It multiplies the p values calculated by the number of tests done and compares that p value to the significance level (i.e. 5%). This controls the family wise error rate, which is the probability of just one false positive. This corrections reduces that chance to the original significance level of 5%.
+
+The BH correction is a less stringent correction. It controls the false discovery rate, which is the rate of false positives. The experimenter chooses the false discovery rate, which can be different to alpha. If the experiment is a first step, and all significant results will be reanalysed in a later experiment, the cost of missing a significant result is high, so it is better to set the false discovery rate at a level higher than alpha (e.g. 0.1 or 0.25) so that potentially signficant items are not missed. The output calculated is a p value, so can be compared to any rate. Here, no further experiments are being done so the original level of 0.05 is used.
+
+```{r adjusted p values}
+sig_results <- tbl_df(sig_results)
+sig_results <- mutate(sig_results, bonf_corr = p.adjust(sig_results$p_values, method = "bonferroni"), BH_corr = p.adjust(sig_results$p_values, method = "BH"))
+sig_results
+
+bonf_sig <- (sig_results[sig_results$bonf_corr < 0.05,])
+bonf_sig
+BH_sig <- (sig_results[sig_results$BH_corr < 0.05, ])
+BH_sig
+```
+
+The corrections show that if the strictest multiple test correction is used then 5 results are significant, but if the less stringent BH test is used the 6 results are significant.
+
+## Conclusion
+
+The report concludes that length is statistically significantly promoted to a greater extent (under the most stringent statistical conditions) when:  
+
+  * A dose of 1 OJ is used compared to a dose of 0.5 OJ
+  
+  * A dose of 1 VC is used compared to a dose of 0.5 VC
+  
+  * A dose of 2 VC is used compared to a dose of 1 VC
+  
+  * A dose of 0.5 OJ is used compared to a dose of 0.5 VC
+  
+  * A dose of 1 OJ is used compared to a dose of 1 VC
+  
+These conclusions assume that each 0.5 dose does not need to be tested against each 2 dose because for both OJ and VC the boxplots showed the distributions to be further apart than compared to the 1 dose. 
+  
+  
+
+
+
+

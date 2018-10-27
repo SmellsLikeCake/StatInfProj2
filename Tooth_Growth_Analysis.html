@@ -206,7 +206,8 @@ t</code></pre>
 ci</code></pre>
 <pre><code>## [1] -6.217322</code></pre>
 <p>Manual calculation of p value:</p>
-<pre class="r"><code>pt(t, df = 18)</code></pre>
+<pre class="r"><code>pOJ01 &lt;- pt(t, df = 18)
+pOJ01</code></pre>
 <pre><code>## [1] 4.17878e-05</code></pre>
 <p>The manual calculations agree with the t.test calculations.</p>
 <p>The results show that it is 95% certain that the mean of OJ dose 0.5 minus the mean of OJ dose 1 is -6.21 or less. This does not include zero so the means are statistically significantly different. The p-value for the test is 4.2x10<sup>-5</sup> which means the result is significant at the 5% level.</p>
@@ -243,8 +244,8 @@ nOJ2 &lt;- nrow(OJ2)
 df &lt;- ((vOJ1/nOJ1 + vOJ2/nOJ2)^2)/((vOJ1/nOJ1)^2/(nOJ1-1) + (vOJ2/nOJ2)^2/(nOJ2-1))
 df</code></pre>
 <pre><code>## [1] 15.84238</code></pre>
-<pre class="r"><code>p &lt;- pt(t, df = df)
-p</code></pre>
+<pre class="r"><code>pOJ12 &lt;- pt(t, df = df)
+pOJ12</code></pre>
 <pre><code>## [1] 0.01959757</code></pre>
 <p>The manual checks agree with t.test. Again the difference is significant at the 5% level.</p>
 </div>
@@ -354,7 +355,7 @@ df0</code></pre>
 <pre class="r"><code>ci0 &lt;- (mean(OJ0[, 1])- mean(VC0[, 1])) + c(-1,1) * qt(0.975, df0) * sqrt(vOJVC0 * (1/nOJ0 + 1/nVC0))
 ci0</code></pre>
 <pre><code>## [1] 1.719057 8.780943</code></pre>
-<pre class="r"><code>p0 &lt;- 2*(1- pt(t0, df0))
+<pre class="r"><code>p0 &lt;- 2*(pt(-abs(t0), df0))
 p0</code></pre>
 <pre><code>## [1] 0.006358607</code></pre>
 </div>
@@ -385,7 +386,7 @@ df1</code></pre>
 <pre class="r"><code>ci1 &lt;- (mean(OJ1[, 1]) - mean(VC1[, 1])) + c(-1, 1) * qt(0.975, df1) * sqrt(vOJVC1 * (1/nOJ1 + 1/nVC1))
 ci1</code></pre>
 <pre><code>## [1] 2.802148 9.057852</code></pre>
-<pre class="r"><code>p1 &lt;- 2*(1- pt(t1, df1))
+<pre class="r"><code>p1 &lt;- 2*(pt(-abs(t1), df1))
 p1</code></pre>
 <pre><code>## [1] 0.001038376</code></pre>
 </div>
@@ -416,11 +417,90 @@ df2</code></pre>
 <pre class="r"><code>ci2 &lt;- (mean(OJ2[, 1]) - mean(VC2[, 1])) + c(-1, 1) * qt(0.975, df2) * sqrt(vOJVC2 * (1/nOJ2 + 1/nVC2))
 ci2</code></pre>
 <pre><code>## [1] -3.79807  3.63807</code></pre>
-<pre class="r"><code>p2 &lt;- 2*(1-pt(t2, df2))
+<pre class="r"><code>p2 &lt;- 2*(pt(-abs(t2), df2))
 p2</code></pre>
-<pre><code>## [1] 1.036148</code></pre>
+<pre><code>## [1] 0.9638516</code></pre>
 </div>
 </div>
+<div id="correcting-for-multiple-testing" class="section level3">
+<h3>Correcting for multiple testing</h3>
+<p>Because the same data has been used to test multiple hypotheses, the chance of one of the significant results being a false positive is higher than the significance level of 5%. For example, if 20 hypotheses are tested and found to be significant at the 5% level, one is expected to be wrong by chance (as 5% means 1 in 20 chance of getting a result that extreme when the null hypothesis is correct). This should be corrected for.</p>
+<p>The p values of all the tests are held in the dataframe all_results.</p>
+<pre class="r"><code>test_names &lt;- c(&quot;pOJ01&quot;, &quot;pOJ12&quot;, &quot;pVC01&quot;, &quot;pVC12&quot;, &quot;p0&quot;, &quot;p1&quot;, &quot;p2&quot;)
+p_values &lt;- c(pOJ01, pOJ12, pVC01, pVC12, p0, p1, p2)
+p_values &lt;- round(p_values, 8)
+p_values</code></pre>
+<pre><code>## [1] 0.00004179 0.01959757 0.00000034 0.00004578 0.00635861 0.00103838
+## [7] 0.96385159</code></pre>
+<pre class="r"><code>all_results &lt;- data.frame(test_names, p_values)
+all_results</code></pre>
+<pre><code>##   test_names   p_values
+## 1      pOJ01 0.00004179
+## 2      pOJ12 0.01959757
+## 3      pVC01 0.00000034
+## 4      pVC12 0.00004578
+## 5         p0 0.00635861
+## 6         p1 0.00103838
+## 7         p2 0.96385159</code></pre>
+<p>The significant results are held in the dataframe sig_results.</p>
+<pre class="r"><code>sig_results &lt;- all_results[all_results$p_value &lt; 0.05, ]
+sig_results</code></pre>
+<pre><code>##   test_names   p_values
+## 1      pOJ01 0.00004179
+## 2      pOJ12 0.01959757
+## 3      pVC01 0.00000034
+## 4      pVC12 0.00004578
+## 5         p0 0.00635861
+## 6         p1 0.00103838</code></pre>
+<p>The Bonferroni correction is the most strict correction. It multiplies the p values calculated by the number of tests done and compares that p value to the significance level (i.e. 5%). This controls the family wise error rate, which is the probability of just one false positive. This corrections reduces that chance to the original significance level of 5%.</p>
+<p>The BH correction is a less stringent correction. It controls the false discovery rate, which is the rate of false positives. The experimenter chooses the false discovery rate, which can be different to alpha. If the experiment is a first step, and all significant results will be reanalysed in a later experiment, the cost of missing a significant result is high, so it is better to set the false discovery rate at a level higher than alpha (e.g. 0.1 or 0.25) so that potentially signficant items are not missed. The output calculated is a p value, so can be compared to any rate. Here, no further experiments are being done so the original level of 0.05 is used.</p>
+<pre class="r"><code>sig_results &lt;- tbl_df(sig_results)
+sig_results &lt;- mutate(sig_results, bonf_corr = p.adjust(sig_results$p_values, method = &quot;bonferroni&quot;), BH_corr = p.adjust(sig_results$p_values, method = &quot;BH&quot;))
+sig_results</code></pre>
+<pre><code>## # A tibble: 6 x 4
+##   test_names    p_values  bonf_corr    BH_corr
+##   &lt;fct&gt;            &lt;dbl&gt;      &lt;dbl&gt;      &lt;dbl&gt;
+## 1 pOJ01      0.0000418   0.000251   0.0000916 
+## 2 pOJ12      0.0196      0.118      0.0196    
+## 3 pVC01      0.000000340 0.00000204 0.00000204
+## 4 pVC12      0.0000458   0.000275   0.0000916 
+## 5 p0         0.00636     0.0382     0.00763   
+## 6 p1         0.00104     0.00623    0.00156</code></pre>
+<pre class="r"><code>bonf_sig &lt;- (sig_results[sig_results$bonf_corr &lt; 0.05,])
+bonf_sig</code></pre>
+<pre><code>## # A tibble: 5 x 4
+##   test_names    p_values  bonf_corr    BH_corr
+##   &lt;fct&gt;            &lt;dbl&gt;      &lt;dbl&gt;      &lt;dbl&gt;
+## 1 pOJ01      0.0000418   0.000251   0.0000916 
+## 2 pVC01      0.000000340 0.00000204 0.00000204
+## 3 pVC12      0.0000458   0.000275   0.0000916 
+## 4 p0         0.00636     0.0382     0.00763   
+## 5 p1         0.00104     0.00623    0.00156</code></pre>
+<pre class="r"><code>BH_sig &lt;- (sig_results[sig_results$BH_corr &lt; 0.05, ])
+BH_sig</code></pre>
+<pre><code>## # A tibble: 6 x 4
+##   test_names    p_values  bonf_corr    BH_corr
+##   &lt;fct&gt;            &lt;dbl&gt;      &lt;dbl&gt;      &lt;dbl&gt;
+## 1 pOJ01      0.0000418   0.000251   0.0000916 
+## 2 pOJ12      0.0196      0.118      0.0196    
+## 3 pVC01      0.000000340 0.00000204 0.00000204
+## 4 pVC12      0.0000458   0.000275   0.0000916 
+## 5 p0         0.00636     0.0382     0.00763   
+## 6 p1         0.00104     0.00623    0.00156</code></pre>
+<p>The corrections show that if the strictest multiple test correction is used then 5 results are significant, but if the less stringent BH test is used the 6 results are significant.</p>
+</div>
+</div>
+<div id="conclusion" class="section level2">
+<h2>Conclusion</h2>
+<p>The report concludes that length is statistically significantly promoted to a greater extent (under the most stringent statistical conditions) when:</p>
+<ul>
+<li><p>A dose of 1 OJ is used compared to a dose of 0.5 OJ</p></li>
+<li><p>A dose of 1 VC is used compared to a dose of 0.5 VC</p></li>
+<li><p>A dose of 2 VC is used compared to a dose of 1 VC</p></li>
+<li><p>A dose of 0.5 OJ is used compared to a dose of 0.5 VC</p></li>
+<li><p>A dose of 1 OJ is used compared to a dose of 1 VC</p></li>
+</ul>
+<p>These conclusions assume that each 0.5 dose does not need to be tested against each 2 dose because for both OJ and VC the boxplots showed the distributions to be further apart than compared to the 1 dose.</p>
 </div>
 
 
