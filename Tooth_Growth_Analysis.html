@@ -179,7 +179,7 @@ summarise(tg, n(), min(len), max(len), mean(len), sd(len))</code></pre>
 <h4><em>Is the additional length seen at dosage 1 significantly higher than at dosage 0.5?</em></h4>
 <p><strong>Null hypothesis:</strong> The mean of OJ’s dosage 1 is the same as the mean of OJ’s dosage 0.5.<br />
 <strong>Alternative hypothesis:</strong> The mean of OJ’s dosage 1 is greater than the mean of OJ’s dosage 0.5.</p>
-<p>The data are not paired, so an independent t-test must be used.</p>
+<p>The data are not paired, so an independent t-test must be used. A one sided test is used because the hypothesis is that a larger dose will result in more growth.</p>
 <pre class="r"><code>OJ0 &lt;- filter(ToothGrowth, supp == &quot;OJ&quot;, dose == 0.5)
 OJ1 &lt;- filter(ToothGrowth, supp == &quot;OJ&quot;, dose == 1)
 
@@ -319,6 +319,106 @@ ciVC12</code></pre>
 <pre class="r"><code>pVC12 &lt;- pt(tVC12, dfVC12)
 pVC12</code></pre>
 <pre><code>## [1] 4.577802e-05</code></pre>
+<p>The alternative hypothesis has been accepted at the 5% level for all four tests. A multiple hypothesis correction is required which is conducted further on in this report.</p>
+</div>
+</div>
+<div id="oj-vs-vc" class="section level3">
+<h3>OJ vs VC</h3>
+<div id="are-there-significant-differences-between-the-lengths-seen-at-dose-0.5-due-to-the-different-supplements-used" class="section level4">
+<h4><em>Are there significant differences between the lengths seen at dose 0.5 due to the different supplements used?</em></h4>
+<p><strong>Null hypothesis:</strong> The mean length seen at dose 0.5 is the same for OJ and VC.<br />
+<strong>Alternative hypothesis:</strong> The mean length seen at dose 0.5 is different for OJ and VC.</p>
+<p>Here a two sided test is used because before collecting the data there was no indication as to which supplement would work best.</p>
+<pre class="r"><code>vOJ0 &lt;- var(OJ0[, 1])
+nOJ0 &lt;- nrow(OJ0)
+vOJVC0 &lt;- ((nOJ0 -1)*vOJ0 + (nVC0 - 1) * vVC0)/(nOJ0 + nVC0 -2)
+t.test(OJ0[, 1],VC0[, 1], alt = &quot;two.sided&quot;, var.equal = FALSE, conf.level = 0.95)</code></pre>
+<pre><code>## 
+##  Welch Two Sample t-test
+## 
+## data:  OJ0[, 1] and VC0[, 1]
+## t = 3.1697, df = 14.969, p-value = 0.006359
+## alternative hypothesis: true difference in means is not equal to 0
+## 95 percent confidence interval:
+##  1.719057 8.780943
+## sample estimates:
+## mean of x mean of y 
+##     13.23      7.98</code></pre>
+<p>Manual checks:</p>
+<pre class="r"><code>t0 &lt;- (mean(OJ0[, 1]) - mean(VC0[, 1])) / sqrt(vOJVC0 * (1/nOJ0 + 1/nVC0))
+t0</code></pre>
+<pre><code>## [1] 3.169733</code></pre>
+<pre class="r"><code>df0 &lt;- (vOJ0/nOJ0 + vVC0/nVC0)^2 / ((vOJ0/nOJ0)^2/(nOJ0 -1) + (vVC0/nVC0)^2/(nVC0 -1))
+df0</code></pre>
+<pre><code>## [1] 14.96875</code></pre>
+<pre class="r"><code>ci0 &lt;- (mean(OJ0[, 1])- mean(VC0[, 1])) + c(-1,1) * qt(0.975, df0) * sqrt(vOJVC0 * (1/nOJ0 + 1/nVC0))
+ci0</code></pre>
+<pre><code>## [1] 1.719057 8.780943</code></pre>
+<pre class="r"><code>p0 &lt;- 2*(1- pt(t0, df0))
+p0</code></pre>
+<pre><code>## [1] 0.006358607</code></pre>
+</div>
+<div id="are-there-significant-differences-between-the-lengths-seen-at-dose-1-due-to-the-different-supplements-used" class="section level4">
+<h4><em>Are there significant differences between the lengths seen at dose 1 due to the different supplements used?</em></h4>
+<p><strong>Null hypothesis:</strong> The mean length seen at dose 1 is the same for OJ and VC.<br />
+<strong>Alternative hypothesis:</strong> The mean length seen at dose 1 is different for OJ and VC.</p>
+<pre class="r"><code>t.test(OJ1[, 1], VC1[, 1], alt = &quot;two.sided&quot;, var.equal = FALSE, conf.level = 0.95)</code></pre>
+<pre><code>## 
+##  Welch Two Sample t-test
+## 
+## data:  OJ1[, 1] and VC1[, 1]
+## t = 4.0328, df = 15.358, p-value = 0.001038
+## alternative hypothesis: true difference in means is not equal to 0
+## 95 percent confidence interval:
+##  2.802148 9.057852
+## sample estimates:
+## mean of x mean of y 
+##     22.70     16.77</code></pre>
+<p>Manual checks:</p>
+<pre class="r"><code>vOJVC1 &lt;- ((nOJ1 -1) * vOJ1 + (nVC1 -1) * vVC1)/(nOJ1 + nVC1 -2)
+t1 &lt;- (mean(OJ1[, 1]) - mean(VC1[, 1])) / sqrt(vOJVC1 * (1/nOJ1 + 1/nVC1))
+t1</code></pre>
+<pre><code>## [1] 4.03277</code></pre>
+<pre class="r"><code>df1 &lt;- (vOJ1/nOJ1 + vVC1/nVC1)^2/ ((vOJ1/nOJ1)^2/(nOJ1-1) + (vVC1/nVC1)^2/(nVC1-1))
+df1</code></pre>
+<pre><code>## [1] 15.35767</code></pre>
+<pre class="r"><code>ci1 &lt;- (mean(OJ1[, 1]) - mean(VC1[, 1])) + c(-1, 1) * qt(0.975, df1) * sqrt(vOJVC1 * (1/nOJ1 + 1/nVC1))
+ci1</code></pre>
+<pre><code>## [1] 2.802148 9.057852</code></pre>
+<pre class="r"><code>p1 &lt;- 2*(1- pt(t1, df1))
+p1</code></pre>
+<pre><code>## [1] 0.001038376</code></pre>
+</div>
+<div id="are-there-significant-differences-between-the-lengths-seen-at-dose-2-due-to-the-different-supplements-used" class="section level4">
+<h4><em>Are there significant differences between the lengths seen at dose 2 due to the different supplements used?</em></h4>
+<p><strong>Null hypothesis:</strong> The mean length seen at dose 2 is the same for OJ and VC.<br />
+<strong>Alternative hypothesis:</strong> The mean length seen at dose 2 is different for OJ and VC.</p>
+<pre class="r"><code>vOJVC2 &lt;- ((nOJ2-1)*vOJ2 + (nVC2-1)*vVC2)/(nOJ2+nVC2-2)
+t.test(OJ2[, 1], VC2[, 1], alt = &quot;two.sided&quot;)</code></pre>
+<pre><code>## 
+##  Welch Two Sample t-test
+## 
+## data:  OJ2[, 1] and VC2[, 1]
+## t = -0.046136, df = 14.04, p-value = 0.9639
+## alternative hypothesis: true difference in means is not equal to 0
+## 95 percent confidence interval:
+##  -3.79807  3.63807
+## sample estimates:
+## mean of x mean of y 
+##     26.06     26.14</code></pre>
+<p>Manual checks:</p>
+<pre class="r"><code>t2 &lt;- (mean(OJ2[, 1]) - mean(VC2[, 1])) / sqrt(vOJVC2 * (1/nOJ2 + 1/nVC2))
+t2</code></pre>
+<pre><code>## [1] -0.0461361</code></pre>
+<pre class="r"><code>df2 &lt;- (vOJ2/nOJ2 + vVC2/nVC2)^2/((vOJ2/nOJ2)^2/(nOJ2-1) +(vVC2/nVC2)^2/(nVC2-1))
+df2</code></pre>
+<pre><code>## [1] 14.03982</code></pre>
+<pre class="r"><code>ci2 &lt;- (mean(OJ2[, 1]) - mean(VC2[, 1])) + c(-1, 1) * qt(0.975, df2) * sqrt(vOJVC2 * (1/nOJ2 + 1/nVC2))
+ci2</code></pre>
+<pre><code>## [1] -3.79807  3.63807</code></pre>
+<pre class="r"><code>p2 &lt;- 2*(1-pt(t2, df2))
+p2</code></pre>
+<pre><code>## [1] 1.036148</code></pre>
 </div>
 </div>
 </div>
